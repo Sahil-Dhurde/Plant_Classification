@@ -1,4 +1,4 @@
-# 🌿 Plant Leaf Disease Classification — CNN Project
+# 🌿 Plant Leaf Disease Classification 
 
 A complete end-to-end deep learning pipeline for classifying plant leaf diseases using the **PlantVillage dataset** from Kaggle. Supports both a **custom CNN** trained from scratch and a **MobileNetV2 transfer learning** model with fine-tuning.
 
