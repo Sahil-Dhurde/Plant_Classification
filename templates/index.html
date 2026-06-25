@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Plant Leaf Recognition | Diagnostic Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --secondary: #8BC34A;
+            --danger: #FF5252;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent: #6366f1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(76, 175, 80, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* ─── Header ─────────────────────────────────────────────────── */
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ─── Main Content ───────────────────────────────────────────── */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 968px) {
+            .dashboard { grid-template-columns: 1fr; }
+        }
+
+        /* ─── Upload Card ────────────────────────────────────────────── */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover { border-color: rgba(76, 175, 80, 0.3); }
+
+        .drop-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(15, 23, 42, 0.3);
+            position: relative;
+        }
+
+        .drop-zone.active {
+            border-color: var(--primary);
+            background: rgba(76, 175, 80, 0.05);
+        }
+
+        .drop-zone svg {
+            width: 64px;
+            height: 64px;
+            fill: var(--text-dim);
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .drop-zone:hover svg { transform: translateY(-5px); fill: var(--primary); }
+
+        #fileInput { display: none; }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ─── Result Card ────────────────────────────────────────────── */
+        #resultView {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            padding: 0.4rem 1rem;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-healthy { background: rgba(76, 175, 80, 0.15); color: #81c784; border: 1px solid rgba(76, 175, 80, 0.3); }
+        .badge-diseased { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .preview-img {
+            width: 100%;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .prediction-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .confidence-meter {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 1rem 0 2rem;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+
+        .top-predictions {
+            margin-top: 2rem;
+        }
+
+        .prob-bar {
+            margin-bottom: 1rem;
+        }
+
+        .prob-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+            color: var(--text-dim);
+        }
+
+        .prob-track {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+        }
+
+        .prob-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.8s ease-out;
+        }
+
+        /* ─── Animations ────────────────────────────────────────────── */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ─── Loader ────────────────────────────────────────────────── */
+        .loader {
+            display: none;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="logo">PlantCare AI</div>
+            <p class="subtitle">Deep learning diagnostic system for 38 categories of healthy and diseased plant leaves.</p>
+        </header>
+
+        <main class="dashboard">
+            <!-- Left: Upload Section -->
+            <section class="card">
+                <div class="drop-zone" id="dropZone">
+                    <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                    <h3>Upload Leaf Photo</h3>
+                    <p style="color: var(--text-dim); margin-top: 0.5rem; font-size: 0.9rem;">Drag & drop or click to browse</p>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+                
+                <div id="loading" style="text-align: center; margin-top: 2rem; display: none;">
+                    <div class="loader"></div>
+                    <p style="color: var(--primary); font-weight: 600;">Analyzing Leaf Architecture...</p>
+                </div>
+
+                <div id="imagePreviewContainer" style="margin-top: 2rem; display: none;">
+                    <img id="selectedImgPreview" src="" class="preview-img">
+                    <button class="btn" id="analyzeBtn">Run Diagnostic</button>
+                    <button class="btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); margin-top: 0.5rem;" id="resetBtn">Change Image</button>
+                </div>
+            </section>
+
+            <!-- Right: Result Section -->
+            <section class="card" id="resultCard" style="opacity: 0.5; pointer-events: none;">
+                <div id="emptyView" style="text-align: center; padding: 4rem 1rem;">
+                    <p style="color: var(--text-dim);">Diagnostic results will appear here after analysis.</p>
+                </div>
+
+                <div id="resultView">
+                    <div class="result-header">
+                        <span id="healthStatus" class="badge">Healthy</span>
+                        <span id="confidenceText" style="color: var(--text-dim); font-size: 0.85rem; font-weight: 600;">98.2% Confidence</span>
+                    </div>
+                    
+                    <h2 id="leafClass" class="prediction-title">Apple | Scab</h2>
+                    <div class="confidence-meter">
+                        <div id="confidenceFill" class="meter-fill"></div>
+                    </div>
+
+                    <div class="top-predictions" id="topPredictions">
+                        <!-- Probabilities injected here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const selectedImgPreview = document.getElementById('selectedImgPreview');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const loading = document.getElementById('loading');
+        const resultView = document.getElementById('resultView');
+        const emptyView = document.getElementById('emptyView');
+        const resultCard = document.getElementById('resultCard');
+
+        let currentFile = null;
+
+        // ─── File Handling ─────────────────────────────────────────────
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('active');
+        });
+
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        function handleFile(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+            currentFile = file;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedImgPreview.src = e.target.result;
+                dropZone.style.display = 'none';
+                imagePreviewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        resetBtn.addEventListener('click', () => {
+            dropZone.style.display = 'block';
+            imagePreviewContainer.style.display = 'none';
+            resultView.style.display = 'none';
+            emptyView.style.display = 'block';
+            resultCard.style.opacity = '0.5';
+            fileInput.value = '';
+        });
+
+        // ─── Analysis ──────────────────────────────────────────────────
+        analyzeBtn.addEventListener('click', async () => {
+            if (!currentFile) return;
+
+            loading.style.display = 'block';
+            analyzeBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', currentFile);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                displayResults(data);
+            } catch (err) {
+                alert('Analysis failed: ' + err.message);
+            } finally {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        function displayResults(data) {
+            resultCard.style.opacity = '1';
+            resultCard.style.pointerEvents = 'auto';
+            emptyView.style.display = 'none';
+            resultView.style.display = 'block';
+
+            // Main info
+            const clsParts = data.class.replace(/___/g, ' | ').replace(/_/g, ' ');
+            document.getElementById('leafClass').innerText = clsParts;
+            document.getElementById('confidenceText').innerText = `${data.confidence.toFixed(1)}% Confidence`;
+            document.getElementById('confidenceFill').style.width = `${data.confidence}%`;
+
+            // Health status
+            const statusBadge = document.getElementById('healthStatus');
+            statusBadge.innerText = data.status;
+            statusBadge.className = data.is_healthy ? 'badge badge-healthy' : 'badge badge-diseased';
+
+            // Top-5 chart
+            const container = document.getElementById('topPredictions');
+            container.innerHTML = '<h4 style="margin-bottom:1rem; font-size:0.9rem; color:var(--text-dim)">PROBABILITY BREAKDOWN</h4>';
+            
+            data.top5.forEach(item => {
+                const cleanLabel = item.label.replace(/___/g, ' | ').replace(/_/g, ' ');
+                const bar = document.createElement('div');
+                bar.className = 'prob-bar';
+                bar.innerHTML = `
+                    <div class="prob-info">
+                        <span>${cleanLabel}</span>
+                        <span>${item.confidence.toFixed(1)}%</span>
+                    </div>
+                    <div class="prob-track">
+                        <div class="prob-fill" style="width: ${item.confidence}%"></div>
+                    </div>
+                `;
+                container.appendChild(bar);
+            });
+        }
+    </script>
+</body>
+</html>
