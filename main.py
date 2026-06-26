@@ -1,6 +1,6 @@
 """
 main.py — Single entry point for the entire Plant Leaf Classification project.
-Run this file to walk through all steps interactively.
+Run this file to walk through all steps interactively. 
 
 Usage:
     python main.py                          # Interactive menu
