@@ -4,6 +4,6 @@ matplotlib
 seaborn
 scikit-learn
 Pillow
-kagglehub
+kagglehub 
 opencv-python
 python-dotenv
